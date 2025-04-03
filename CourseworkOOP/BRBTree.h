@@ -22,28 +22,44 @@ namespace std {
 			_color = Color::Red;
 		}
 
-		void changeColor(Color color) {
-
+		T getValue() {
+			return _value;
 		}
 
-		T getValue() {
-
+		void setValue(T value) {
+			_value = value;
 		}
 
 		Color getColor() {
+			return _color;
+		}
 
+		void setColor(Color color) {
+			_color = color;
 		}
 
 		Node<T>* getLeftChild() {
+			return _leftChild;
+		}
 
+		void setLeftChild(Node<T>* leftChild) {
+			_leftChild = leftChild;
 		}
 
 		Node<T>* getRightChild() {
+			return _rightChild;
+		}
 
+		void setRightChild(Node<T>* rightChild) {
+			_rightChild = rightChild;
 		}
 
 		Node<T>* getParent() {
+			return _parent;
+		}
 
+		void setParent(Node<T>* parent) {
+			_parent = parent;
 		}
 
 		void takePlaceOfParent() {
@@ -57,6 +73,7 @@ namespace std {
 		void balanceTreeAfterInsert() {
 
 		}
+
 		void balanceTreeAfterErase() {
 
 		}
@@ -82,11 +99,11 @@ namespace std {
 		}
 
 		T getMax() {
-
+			return getMax(_root);
 		}
 
 		T getMin() {
-
+			return getMin(_root);
 		}
 
 		Node<T>* find(T value) {
