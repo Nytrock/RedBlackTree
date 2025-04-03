@@ -22,29 +22,76 @@ namespace std {
 			_color = Color::Red;
 		}
 
-		void changeColor(Color color);
-		T getValue();
-		Color getColor();
-		Node<T>* getLeftChild();
-		Node<T>* getRightChild();
-		Node<T>* getParent();
-		void takePlaceOfParent();
+		void changeColor(Color color) {
+
+		}
+
+		T getValue() {
+
+		}
+
+		Color getColor() {
+
+		}
+
+		Node<T>* getLeftChild() {
+
+		}
+
+		Node<T>* getRightChild() {
+
+		}
+
+		Node<T>* getParent() {
+
+		}
+
+		void takePlaceOfParent() {
+
+		}
 	};
 
 	template <typename T> class BRBTree {
 	private:
 		Node<T>* _root;
-		void balanceTreeAfterInsert();
-		void balanceTreeAfterErase();
-		T getMax(Node<T>* node);
-		T getMin(Node<T>* node);
+		void balanceTreeAfterInsert() {
+
+		}
+		void balanceTreeAfterErase() {
+
+		}
+
+		T getMax(Node<T>* node) {
+
+		}
+
+		T getMin(Node<T>* node) {
+
+		}
 	public:
-		void insert(T value);
-		void erase(T value);
-		void erase(Node<T>* node);
-		T getMax();
-		T getMin();
-		Node<T>* find(T value);
+		void insert(T value) {
+
+		}
+
+		void erase(T value) {
+
+		}
+
+		void erase(Node<T>* node) {
+
+		}
+
+		T getMax() {
+
+		}
+
+		T getMin() {
+
+		}
+
+		Node<T>* find(T value) {
+
+		}
 	};
 }
 #endif
