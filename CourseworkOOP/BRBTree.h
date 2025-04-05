@@ -14,10 +14,17 @@ namespace std {
 		Node<T>* _parent;
 		Color _color;
 	public:
-		Node(T value, Node<T>* parent) {
-			_value = value;
+		Node() {
 			_leftChild = nullptr;
 			_rightChild = nullptr;
+			_parent = nullptr;
+			_color = Color::Black;
+		}
+
+		Node(T value, Node<T>* parent, Node<T>* leaf) {
+			_value = value;
+			_leftChild = leaf;
+			_rightChild = leaf;
 			_parent = parent;
 			_color = Color::Red;
 		}
@@ -87,35 +94,37 @@ namespace std {
 			}
 		}
 
-		Node<T>* getMaxNode() {
-			if (_rightChild == nullptr)
+		Node<T>* getMaxNode(Node<T>* leaf) {
+			if (_rightChild == leaf)
 				return this;
-			return _rightChild->getMaxNode();
+			return _rightChild->getMaxNode(leaf);
 		}
 
-		Node<T>* getMinNode() {
-			if (_leftChild == nullptr)
+		Node<T>* getMinNode(Node<T>* leaf) {
+			if (_leftChild == leaf)
 				return this;
-			return _leftChild->getMinNode();
+			return _leftChild->getMinNode(leaf);
 		}
 
 		void print() {
+			if (_leftChild == nullptr && _rightChild == nullptr)
+				return;
+
 			cout << _value;
 			if (_color == Color::Red)
 				cout << "R ";
 			else
 				cout << "B ";
 
-			if (_leftChild != nullptr)
-				_leftChild->print();
-			if (_rightChild != nullptr)
-				_rightChild->print();
+			_leftChild->print();
+			_rightChild->print();
 		}
 	};
 
 	template <typename T> class BRBTree {
 	private:
-		Node<T>* _root = nullptr;
+		Node<T>* _leaf;
+		Node<T>* _root;
 
 		void switchNodeAndHisParent(Node<T>* node) {
 			bool isParentRoot = node->getParent() == _root;
@@ -130,87 +139,109 @@ namespace std {
 				return;
 			}
 
+			Node<T>* uncle;
 			Node<T>* parent = newNode->getParent();
 			Node<T>* grandparent = parent->getParent();
+			while (parent->getColor() == Color::Red) {
+				if (parent == grandparent->getLeftChild())
+					uncle = grandparent->getRightChild();
+				else
+					uncle = grandparent->getLeftChild();
 
-			if (grandparent == nullptr)
-				return;
-
-			Node<T>* uncle;
-			if (parent == grandparent->getLeftChild())
-				uncle = grandparent->getRightChild();
-			else
-				uncle = grandparent->getLeftChild();
-
-			Color uncleColor = Color::Black;
-			if (uncle != nullptr)
-				uncleColor = uncle->getColor();
-
-			if (parent->getColor() == Color::Red && uncleColor == Color::Red) {
-				parent->setColor(Color::Black);
-				uncle->setColor(Color::Black);
-				if (grandparent != _root)
+				if (uncle->getColor() == Color::Red) {
+					parent->setColor(Color::Black);
+					uncle->setColor(Color::Black);
 					grandparent->setColor(Color::Red);
-			} else if (parent->getColor() == Color::Red) {
-				if ((parent->getRightChild() == newNode) != (grandparent->getRightChild() == parent)) {
-					switchNodeAndHisParent(newNode);
-					parent = newNode;
-					grandparent = parent->getParent();
+					newNode = grandparent;
+				} else {
+					if ((parent == grandparent->getLeftChild()) != (newNode == parent->getLeftChild())) {
+						switchNodeAndHisParent(newNode);
+						newNode = parent;
+						parent = newNode->getParent();
+						grandparent = parent->getParent();
+					}
+					parent->setColor(Color::Black);
+					grandparent->setColor(Color::Red);
+					switchNodeAndHisParent(parent);
 				}
-				parent->setColor(Color::Black);
-				grandparent->setColor(Color::Red);
-				switchNodeAndHisParent(parent);
+
+				if (newNode == _root)
+					break;
+
+				parent = newNode->getParent();
+				grandparent = parent->getParent();
 			}
+			_root->setColor(Color::Black);
 		}
 
-		void balanceTreeAfterErase(Node<T>* erasedNodeBrother) {
-			Node<T>* brotherLeftChild = erasedNodeBrother->getLeftChild();
-			Node<T>* brotherRightChild = erasedNodeBrother->getRightChild();
-			Node<T>* parent = erasedNodeBrother->getParent();
+		void balanceTreeAfterErase(Node<T>* node) {
+			while (node != _root && node->getColor() == Color::Black) {
+				Node<T>* brother;
+				bool isBrotherRight = node->getParent()->getLeftChild() == node;
+				if (isBrotherRight)
+					brother = node->getParent()->getRightChild();
+				else
+					brother = node->getParent()->getLeftChild();
 
-			if (erasedNodeBrother->getColor() == Color::Black) {
-				if (brotherRightChild->getColor() == Color::Red) {
-					erasedNodeBrother->setColor(parent->getColor());
-					brotherRightChild->setColor(Color::Black);
-					parent->setColor(Color::Black);
-					switchNodeAndHisParent(erasedNodeBrother);
-					return;
+				if (brother->getColor() == Color::Red) {
+					brother->setColor(Color::Black);
+					node->getParent()->setColor(Color::Red);
+					switchNodeAndHisParent(brother);
+					
+					if (isBrotherRight)
+						brother = node->getParent()->getRightChild();
+					else
+						brother = node->getParent()->getLeftChild();
 				}
 
-				if (brotherLeftChild->getColor() == Color::Red) {
-					erasedNodeBrother->setColor(Color::Red);
-					brotherLeftChild->setColor(Color::Black);
-					switchNodeAndHisParent(brotherLeftChild);
-					return;
-				}
+				Node<T>* brotherLeftChild = brother->getLeftChild();
+				Node<T>* brotherRightChild = brother->getRightChild();
 
-				if (parent->getColor() == Color::Black) {
-					if (parent == _root) {
-						erasedNodeBrother->setColor(Color::Red);
-						return;
+				if (brotherLeftChild->getColor() == Color::Black && brotherRightChild->getColor() == Color::Black) {
+					brother->setColor(Color::Red);
+					node = brother->getParent();
+				} else {
+					Node<T>* brotherChildToCheck = isBrotherRight ? brotherRightChild : brotherLeftChild;
+					Node<T>* brotherAnotherChild = isBrotherRight ? brotherLeftChild : brotherRightChild;
+
+					if (brotherChildToCheck->getColor() == Color::Black) {
+						brotherAnotherChild->setColor(Color::Black);
+						brother->setColor(Color::Red);
+						switchNodeAndHisParent(brotherAnotherChild);
+						brother = brotherAnotherChild;
 					}
 
-					parent->setColor(Color::Red);
-					switchNodeAndHisParent(erasedNodeBrother);
+					brother->setColor(brother->getParent()->getColor());
+					brother->getParent()->setColor(Color::Black);
+					if (isBrotherRight)
+						brother->getRightChild()->setColor(Color::Black);
+					else
+						brother->getLeftChild()->setColor(Color::Black);
+					switchNodeAndHisParent(brother);
+					node = _root;
 				}
-
-				erasedNodeBrother->setColor(Color::Red);
-				parent->setColor(Color::Black);
-			} else {
-				erasedNodeBrother->setColor(Color::Black);
-				parent->setColor(Color::Red);
-				switchNodeAndHisParent(erasedNodeBrother);
 			}
+			node->setColor(Color::Black);
 		}
 	public:
+		BRBTree() {
+			_leaf = new Node<T>();
+			_root = nullptr;
+		}
+
 		void print() {
+			if (_root == nullptr) {
+				cout << "Tree is empty" << endl;
+				return;
+			}
+
 			_root->print();
 			cout << endl;
 		}
 
 		void insert(T value) {
 			if (_root == nullptr) {
-				_root = new Node<T>(value, nullptr);
+				_root = new Node<T>(value, nullptr, _leaf);
 				balanceTreeAfterInsert(_root);
 				return;
 			}
@@ -218,7 +249,7 @@ namespace std {
 			Node<T>* currentNode = _root;
 			Node<T>* parent = nullptr;
 
-			while (currentNode != nullptr) {
+			while (currentNode != _leaf) {
 				parent = currentNode;
 				if (value >= currentNode->getValue())
 					currentNode = currentNode->getRightChild();
@@ -226,7 +257,7 @@ namespace std {
 					currentNode = currentNode->getLeftChild();
 			}
 
-			Node<T>* newNode = new Node<T>(value, parent);
+			Node<T>* newNode = new Node<T>(value, parent, _leaf);
 			if (value >= parent->getValue())
 				parent->setRightChild(newNode);
 			else
@@ -243,51 +274,75 @@ namespace std {
 		}
 
 		void erase(Node<T>* node) {
-			if (node == nullptr)
+			if (node == _leaf)
 				return;
 
 			Node<T>* leftChild = node->getLeftChild();
 			Node<T>* rightChild = node->getRightChild();
 			Node<T>* parent = node->getParent();
-			bool isNodeLeft = parent->getLeftChild() == node;
+			Color nodeColor = node->getColor();
 
-			if (leftChild == nullptr && rightChild == nullptr) {
-				Node<T>* brother;
-				Color nodeColor = node->getColor();
-
-				if (isNodeLeft) {
-					brother = parent->getRightChild();
-					parent->setLeftChild(nullptr);
-				} else {
-					brother = parent->getLeftChild();
-					parent->setRightChild(nullptr);
+			if (leftChild == _leaf && rightChild == _leaf) {
+				if (node == _root) {
+					_root = nullptr;
+					delete node;
+					return;
 				}
 
+				Node<T>* child;
+				if (leftChild != _leaf)
+					child = leftChild;
+				else
+					child = rightChild;
+
+				if (parent->getLeftChild() == node)
+					parent->setLeftChild(_leaf);
+				else 
+					parent->setRightChild(_leaf);
+				
 				delete node;
 				if (nodeColor == Color::Black)
-					balanceTreeAfterErase(brother);
+					balanceTreeAfterErase(child);
 				return;
 			} 
 			
-			if (leftChild != nullptr && rightChild != nullptr) {
-				Node<T>* nodeToReplace = leftChild->getMaxNode();
+			if (leftChild != _leaf && rightChild != _leaf) {
+				Node<T>* nodeToReplace = leftChild->getMaxNode(_leaf);
 				T value = nodeToReplace->getValue();
 				erase(nodeToReplace);
 				node->setValue(value);
 				return;
 			} 
 			
-			if (leftChild != nullptr) {
-				parent->setLeftChild(leftChild);
+			if (leftChild != _leaf) {
+				if (node == _root) {
+					_root = leftChild;
+				} else {
+					if (parent->getLeftChild() == node)
+						parent->setLeftChild(leftChild);
+					else
+						parent->setRightChild(leftChild);
+				}
 				leftChild->setColor(Color::Black);
 				delete node;
+				if (nodeColor == Color::Black)
+					balanceTreeAfterErase(leftChild);
 				return;
 			} 
 			
-			if (rightChild != nullptr) {
-				parent->setRightChild(rightChild);
+			if (rightChild != _leaf) {
+				if (node == _root) {
+					_root = rightChild;
+				} else {
+					if (parent->getLeftChild() == node)
+						parent->setLeftChild(rightChild);
+					else
+						parent->setRightChild(rightChild);
+				}
 				rightChild->setColor(Color::Black);
 				delete node;
+				if (nodeColor == Color::Black)
+					balanceTreeAfterErase(rightChild);
 			}
 		}
 
@@ -295,7 +350,7 @@ namespace std {
 			Node<T>* currentNode = _root;
 			Node<T>* parent = nullptr;
 
-			while (currentNode != nullptr && currentNode->getValue() != value) {
+			while (currentNode != _leaf && currentNode->getValue() != value) {
 				parent = currentNode;
 				if (value > currentNode->getValue())
 					currentNode = currentNode->getRightChild();
@@ -307,11 +362,11 @@ namespace std {
 		}
 
 		T getMax() {
-			return _root->getMaxNode()->getValue();
+			return _root->getMaxNode(_leaf)->getValue();
 		}
 
 		T getMin() {
-			return _root->getMinNode()->getValue();
+			return _root->getMinNode(_leaf)->getValue();
 		}
 	};
 }
