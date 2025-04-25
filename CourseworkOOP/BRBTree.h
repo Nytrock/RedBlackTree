@@ -110,14 +110,21 @@ namespace std {
 			if (_leftChild == nullptr && _rightChild == nullptr)
 				return;
 
+			_leftChild->print();
+
 			cout << _value;
 			if (_color == Color::Red)
 				cout << "R ";
 			else
 				cout << "B ";
 
-			_leftChild->print();
 			_rightChild->print();
+		}
+
+		int length() {
+			if (_leftChild == nullptr && _rightChild == nullptr)
+				return 0;
+			return _leftChild->length() + _rightChild->length() + 1;
 		}
 	};
 
@@ -237,6 +244,12 @@ namespace std {
 
 			_root->print();
 			cout << endl;
+		}
+
+		int length() {
+			if (_root == nullptr)
+				return 0;
+			_root->length();
 		}
 
 		void insert(T value) {
