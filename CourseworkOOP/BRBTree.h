@@ -106,19 +106,22 @@ namespace std {
 			return _leftChild->getMinNode(leaf);
 		}
 
-		void print() {
+		void print(Node<T>* root) {
 			if (_leftChild == nullptr && _rightChild == nullptr)
 				return;
 
-			_leftChild->print();
+			_leftChild->print(root);
 
 			cout << _value;
+			if (this == root)
+				cout << "K";
+
 			if (_color == Color::Red)
 				cout << "R ";
 			else
 				cout << "B ";
 
-			_rightChild->print();
+			_rightChild->print(root);
 		}
 
 		int length() {
@@ -242,7 +245,7 @@ namespace std {
 				return;
 			}
 
-			_root->print();
+			_root->print(_root);
 			cout << endl;
 		}
 
@@ -302,12 +305,6 @@ namespace std {
 					return;
 				}
 
-				Node<T>* child;
-				if (leftChild != _leaf)
-					child = leftChild;
-				else
-					child = rightChild;
-
 				if (parent->getLeftChild() == node)
 					parent->setLeftChild(_leaf);
 				else 
@@ -315,7 +312,7 @@ namespace std {
 				
 				delete node;
 				if (nodeColor == Color::Black)
-					balanceTreeAfterErase(child);
+					balanceTreeAfterErase(_leaf);
 				return;
 			} 
 			
@@ -338,8 +335,6 @@ namespace std {
 				}
 				leftChild->setColor(Color::Black);
 				delete node;
-				if (nodeColor == Color::Black)
-					balanceTreeAfterErase(leftChild);
 				return;
 			} 
 			
@@ -354,8 +349,6 @@ namespace std {
 				}
 				rightChild->setColor(Color::Black);
 				delete node;
-				if (nodeColor == Color::Black)
-					balanceTreeAfterErase(rightChild);
 			}
 		}
 
